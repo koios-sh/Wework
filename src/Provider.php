@@ -10,14 +10,7 @@ class Provider extends AbstractProvider implements ProviderInterface
 {
     const IDENTIFIER = 'WEWORK';
 
-    protected $agentId;
     protected $scopes = [];
-
-    public function setAgentId($agentId)
-    {
-        $this->agentId = $agentId;
-        return $this;
-    }
 
     protected function getAuthUrl($state)
     {
@@ -34,7 +27,7 @@ class Provider extends AbstractProvider implements ProviderInterface
             'redirect_uri' => $this->redirectUrl,
             'response_type' => 'code',
             'scope' => $this->formatScopes($this->scopes, $this->scopeSeparator),
-            'agentid' => $this->agentId,
+            'agentid' => $this->getAgentId(),
             'state' => $state,
         ];
         return sprintf('https://open.weixin.qq.com/connect/oauth2/authorize?%s#wechat_redirect', http_build_query($queries));
@@ -44,7 +37,7 @@ class Provider extends AbstractProvider implements ProviderInterface
     {
         $queries = [
             'appid' => $this->clientId,
-            'agentid' => $this->agentId,
+            'agentid' => $this->getAgentId(),
             'redirect_uri' => $this->redirectUrl,
             'state' => $state,
         ];
@@ -114,5 +107,15 @@ class Provider extends AbstractProvider implements ProviderInterface
         $this->credentialsResponseBody = json_decode($response->getBody(), true);
 
         return $this->credentialsResponseBody;
+    }
+    
+    protected function getAgentId()
+    {
+        return $this->getConfig('agentId', '');
+    }
+    
+    public static function additionalConfigKeys()
+    {
+        return ['agentId'];
     }
 }
