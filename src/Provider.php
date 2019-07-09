@@ -111,11 +111,11 @@ class Provider extends AbstractProvider implements ProviderInterface
     
     protected function getAgentId()
     {
-        return $this->getConfig('agentId', '');
+        return $this->getConfig('agent_id', '');
     }
     
     public static function additionalConfigKeys()
     {
-        return ['agentId'];
+        return ['agent_id'];
     }
 }
