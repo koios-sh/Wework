@@ -5,6 +5,7 @@ namespace SocialiteProviders\Wework;
 use Laravel\Socialite\Two\ProviderInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
+use function GuzzleHttp\json_decode;
 
 class Provider extends AbstractProvider implements ProviderInterface
 {
@@ -77,7 +78,28 @@ class Provider extends AbstractProvider implements ProviderInterface
                 'userid' => $userId
             ]
         ]);
-        return json_decode($response->getBody(), true);
+
+        $user = json_decode($response->getBody(), true);
+        $department = $this->getUserDepartment($token, $user);
+        $user['department'] = $department;
+        return $user;
+    }
+
+    protected function getUserDepartment($token, $user) {
+        $departmentIds = $user['department'];
+        $_department = [];
+        $response = $this->getHttpClient()->get('https://qyapi.weixin.qq.com/cgi-bin/department/list', [
+            'query' => [
+                'access_token' => $token
+            ]
+        ]);
+        $departments = json_decode($response->getBody(), true)['department'];
+        foreach ($departments as $departInfo) {
+            if (in_array($departInfo['id'], $departmentIds)) {
+                array_push($_department, $departInfo['name']);
+            }
+        }
+        return $_department;
     }
 
     protected function mapUserToObject(array $user)
@@ -85,6 +107,7 @@ class Provider extends AbstractProvider implements ProviderInterface
         return (new User())->setRaw($user)->map([
             'id'       => $user['userid'],
             'name'     => $user['name'],
+            'nickname' => $user['alias'],
             'email'    => $user['email'],
             'avatar'   => $user['avatar'],
         ]);
